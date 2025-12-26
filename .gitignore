@@ -1,0 +1,27 @@
+# --- ROS 2 Standard Directories ---
+install/
+build/
+log/
+
+# --- Large Files & Models ---
+# Ignoring YOLO weights (.pt files) as they are usually too large for Git
+*.pt
+# Ignoring datasets if they contain large amounts of raw data
+datasets/
+
+# --- Simulation & Map Data ---
+# These are often large binary or environment files
+AWSIM-Demo/
+Shinjuku-Map/
+
+# --- Generated Visualization Files ---
+# These appear to be timestamped exports from tf2_tools or rqt_graph
+frames_*.gv
+frames_*.pdf
+rosgraph.png
+
+# --- System & IDE Files ---
+.vscode/
+.DS_Store
+__pycache__/
+*.pyc

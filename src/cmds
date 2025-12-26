@@ -1,0 +1,22 @@
+cd ~/Music/DvaitAI/ros2_ws
+
+source /opt/ros/humble/setup.bash
+source /usr/share/gazebo/setup.sh
+
+# add ROS plugins dir to Gazebo plugin path
+export GAZEBO_PLUGIN_PATH=$GAZEBO_PLUGIN_PATH:/opt/ros/humble/lib
+
+echo $GAZEBO_PLUGIN_PATH
+
+
+WORLD_PATH=$(ros2 pkg prefix av_gazebo_bringup)/share/av_gazebo_bringup/worlds/av_test.world
+
+gazebo --verbose "$WORLD_PATH" \
+  -s libgazebo_ros_init.so \
+  -s libgazebo_ros_factory.so
+source /opt/ros/humble/setup.bash
+ros2 service list | grep spawn_entity
+ros2 run xacro xacro ego_vehicle.urdf.xacro -o ego_vehicle.urdf
+
+pkill -9 gzserver
+pkill -9 gzclient

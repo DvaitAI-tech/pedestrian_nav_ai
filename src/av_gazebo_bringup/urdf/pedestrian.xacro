@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro" name="pedestrian">
+
+  <link name="base_link">
+    <inertial>
+      <mass value="200.0"/> <origin xyz="0 0 0.1" rpy="0 0 0"/> <inertia ixx="50.0" ixy="0" ixz="0" iyy="50.0" iyz="0" izz="50.0"/>
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/> 
+      <geometry>
+        <mesh filename="model://person_standing/meshes/standing.dae" scale="2.5 2.5 2.5"/>
+      </geometry>
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 2.25" rpy="0 0 0"/>
+      <geometry>
+        <box size="1.2 1.2 4.5"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <gazebo reference="base_link">
+    <mu1>0.01</mu1>
+    <mu2>0.01</mu2>
+  </gazebo>
+
+  <gazebo>
+    <plugin name="pedestrian_controller" filename="libgazebo_ros_planar_move.so">
+      <ros>
+        <remapping>cmd_vel:=cmd_vel</remapping>
+        <remapping>odom:=odom</remapping>
+      </ros>
+      <update_rate>20</update_rate>
+      <publish_rate>10</publish_rate>
+      <frame_name>base_link</frame_name>
+      <child_frame_id>base_link</child_frame_id>
+    </plugin>
+  </gazebo>
+</robot>

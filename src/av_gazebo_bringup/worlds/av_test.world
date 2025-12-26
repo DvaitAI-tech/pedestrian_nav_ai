@@ -1,0 +1,91 @@
+<?xml version="1.0"?>
+<sdf version="1.6">
+  <world name="runway_world">
+
+    <scene>
+      <ambient>0.6 0.6 0.6 1</ambient>
+      <background>0.69 0.87 1 1</background>
+      <shadows>true</shadows>
+      <sky>
+        <clouds><speed>8</speed><cloud_coverage>0.25</cloud_coverage></clouds>
+      </sky>
+    </scene>
+
+    <include><uri>model://sun</uri></include>
+    <include><uri>model://ground_plane</uri></include>
+
+    <model name="textured_ground">
+      <static>true</static>
+      <pose>0 0 0 0 0 0</pose>
+      <link name="ground_link">
+        <visual name="ground_visual">
+          <geometry><plane><normal>0 0 1</normal><size>2000 2000</size></plane></geometry>
+          <material>
+            <script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Grass</name></script>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="runway_road">
+      <static>true</static>
+      <pose>0 0 0.01 0 0 0</pose> 
+      <link name="road_link">
+        <visual name="road_visual">
+          <geometry><box><size>1000 25 0.02</size></box></geometry>
+          <material>
+            <script><uri>file://media/materials/scripts/gazebo.material</uri><name>Gazebo/Grey</name></script>
+          </material>
+        </visual>
+        <collision name="road_collision">
+          <geometry><box><size>1000 25 0.02</size></box></geometry>
+        </collision>
+      </link>
+    </model>
+
+    <model name="sidewalk_left">
+      <static>true</static>
+      <pose>0 13.5 0.02 0 0 0</pose> 
+      <link name="left_link">
+        <visual name="left_visual">
+          <geometry><box><size>1000 2 0.05</size></box></geometry>
+          <material><ambient>0.7 0.7 0.7 1</ambient><diffuse>0.7 0.7 0.7 1</diffuse></material>
+        </visual>
+        <collision name="left_collision"><geometry><box><size>1000 2 0.05</size></box></geometry></collision>
+      </link>
+    </model>
+
+    <model name="sidewalk_right">
+      <static>true</static>
+      <pose>0 -13.5 0.02 0 0 0</pose> 
+      <link name="right_link">
+        <visual name="right_visual">
+          <geometry><box><size>1000 2 0.05</size></box></geometry>
+          <material><ambient>0.7 0.7 0.7 1</ambient><diffuse>0.7 0.7 0.7 1</diffuse></material>
+        </visual>
+        <collision name="right_collision"><geometry><box><size>1000 2 0.05</size></box></geometry></collision>
+      </link>
+    </model>
+
+    <!-- <model name="giant_pedestrian">
+      <static>true</static>
+      <pose>-440 0 0 0 0 -1.57</pose> <link name="link">
+        <visual name="visual">
+          <geometry>
+            <mesh>
+              <uri>model://person_standing/meshes/standing.dae</uri>
+              <scale>2.5 2.5 2.5</scale>
+            </mesh>
+          </geometry>
+        </visual>
+        <collision name="collision">
+          <pose>0 0 2.25 0 0 0</pose> 
+          <geometry>
+            <box><size>1.2 0.8 4.5</size></box>
+          </geometry>
+        </collision>
+      </link>
+    </model> -->
+
+  </world>
+</sdf>

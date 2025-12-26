@@ -1,0 +1,29 @@
+material Av/Road
+{
+  technique
+  {
+    pass
+    {
+      texture_unit
+      {
+        texture asphalt.png
+        filtering anisotropic
+      }
+    }
+  }
+}
+
+material Av/Grass
+{
+  technique
+  {
+    pass
+    {
+      texture_unit
+      {
+        texture grass.png
+        filtering anisotropic
+      }
+    }
+  }
+}
