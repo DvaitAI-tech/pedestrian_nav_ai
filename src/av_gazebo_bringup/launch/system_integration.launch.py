@@ -78,13 +78,13 @@ def generate_launch_description():
         executable='ped_randomizer.py', # Name of the script we installed
         output='screen'
     )
-    # 5. Pedestrian tracking node
+    # 6. Pedestrian tracking node
     tracking_manager = Node(
         package='av_sensor_package',
         executable='pedestrian_tracker_node', # Name of the script we installed
         output='screen'
     )
-    # 3. Fusion Node
+    # 7. Fusion Node
     fusion_node = Node(
         package='av_sensor_package',
         executable='pedestrian_world_projection', # Or 'lidar_camera_fusion' if you renamed it
@@ -92,6 +92,21 @@ def generate_launch_description():
         parameters=[{'use_sim_time': True}]  # <--- THIS IS THE CRITICAL FIX
     )
 
+    # 8. Pedestrian TTC Risk Node
+    # Equivalent to: ros2 run av_sensor_package pedestrian_ttc_risk_world
+    ttc_risk_node = Node(
+        package='av_sensor_package',
+        executable='pedestrian_ttc_risk_world',
+        output='screen'
+    )
+
+    # 9. Fusion Visualizer Node
+    # Equivalent to: ros2 run av_sensor_package fusion_visualizer
+    fusion_visualizer_node = Node(
+        package='av_sensor_package',
+        executable='fusion_visualizer',
+        output='screen'
+    )
     return LaunchDescription([
         set_gz_resource,
         gazebo,
@@ -100,5 +115,7 @@ def generate_launch_description():
         yolo_node,
         pedestrian_manager,
         tracking_manager,
-        fusion_node
+        fusion_node,
+        ttc_risk_node,
+        fusion_visualizer_node
     ])
