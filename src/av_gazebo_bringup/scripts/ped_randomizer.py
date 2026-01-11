@@ -11,8 +11,8 @@ import time
 
 # === CONFIGURATION ===
 NUM_PEDESTRIANS = 20       # How many people to spawn
-AREA_X_MIN = -500.0        # Range near your car
-AREA_X_MAX =  500.0
+AREA_X_MIN = -300.0        # Range near your car
+AREA_X_MAX =  300.0
 AREA_Y_MIN = -10.0         # Road width range
 AREA_Y_MAX = 10.0
 # =====================

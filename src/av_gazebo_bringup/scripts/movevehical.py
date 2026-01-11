@@ -5,7 +5,7 @@ from geometry_msgs.msg import Twist
 import sys, select, termios, tty
 
 # === SETTINGS ===
-SPEED = 2.0        # Meters per second
+SPEED = 10.0        # Meters per second
 TURN_SPEED = 1.0   # Radians per second
 
 # Instructions printed to screen
@@ -26,9 +26,9 @@ CTRL-C to quit
 class KeyboardController(Node):
     def __init__(self):
         super().__init__('keyboard_controller')
-        
-        # Publisher to /ego/cmd_vel
-        self.publisher_ = self.create_publisher(Twist, '/ego/cmd_vel', 10)
+
+        # Publisher to /ego/cmd_vel_manual
+        self.publisher_ = self.create_publisher(Twist, '/ego/cmd_vel_manual', 10)
         self.get_logger().info('Keyboard Controller Started')
 
     def publish_velocity(self, linear_y, angular_z):

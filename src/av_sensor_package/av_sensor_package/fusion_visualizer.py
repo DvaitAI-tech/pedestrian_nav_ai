@@ -45,7 +45,7 @@ class FusionVisualizer(Node):
 
         # Timer
         self.create_timer(0.05, self.draw_loop) # 20 FPS
-        self.get_logger().info("🚀 Advanced Dashboard Started!")
+        self.get_logger().info("Advanced Dashboard Started!")
 
     def ped_callback(self, msg):
         self.pedestrians = []

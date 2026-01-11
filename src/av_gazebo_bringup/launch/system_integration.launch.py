@@ -54,7 +54,7 @@ def generate_launch_description():
         executable='spawn_entity.py',
         arguments=['-entity', 'ego_vehicle', 
                    '-file', tmp_urdf, 
-                   '-x', '-490', 
+                   '-x', '-302', 
                    '-y', '0', 
                    '-z', '0.2', 
                    '-Y', '-1.60'],
@@ -117,5 +117,5 @@ def generate_launch_description():
         tracking_manager,
         fusion_node,
         ttc_risk_node,
-        fusion_visualizer_node
+        # fusion_visualizer_node
     ])
