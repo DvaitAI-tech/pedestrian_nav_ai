@@ -9,13 +9,11 @@ import math
 import time
 
 # Messages
-from geometry_msgs.msg import PoseArray
-from geometry_msgs.msg import Twist
+from geometry_msgs.msg import PoseArray, Twist
 from sensor_msgs.msg import LaserScan
 from std_srvs.srv import SetBool, Trigger
 
 class TrackedPedestrian:
-    """Helper class to manage individual track states"""
     def __init__(self, id, x, y):
         self.id = id
         self.x = x
@@ -26,177 +24,173 @@ class FusionVisualizer(Node):
     def __init__(self):
         super().__init__('fusion_visualizer')
 
+        # --- State Variables ---
         self.sim_running = True
         self.ego_speed = 0.0
         self.current_decision = "GO"
-        self.critical_id = -1  # Parsed from the decision string
+        self.critical_id = -1 
         
-        # --- HEALTH MONITORING ---
         self.topic_health = {
             "lidar": {"last_msg": 0.0, "alive": False},
             "perception": {"last_msg": 0.0, "alive": False}
         }
         
-        self.create_service(SetBool, '/dashboard/start_stop', self.handle_start_stop)
-        self.create_service(Trigger, '/dashboard/reset', self.handle_reset)
-
-        # --- SUBSCRIBERS ---
-        self.sub_peds = self.create_subscription(PoseArray, '/perception/pedestrians_world', self.ped_callback, 10)
-        self.sub_scan = self.create_subscription(LaserScan, '/ego/lidar/scan', self.scan_callback, 10)
-        self.create_subscription(String,'/av/decision_state',self.decision_callback,10)
-        self.create_subscription(Twist, '/ego/cmd_vel',self.speed_callback,10)
-
-        # --- SETTINGS ---
-        self.window_name = "AV Perception Dashboard v2.0"
-        self.img_h, self.img_w = 900, 1100
-        self.scale = 15.0  
-        # Shifted right to accommodate the health panel
-        self.car_x, self.car_y = (self.img_w + 250) // 2, self.img_h - 100
-
-        # DATA CONTAINERS
+        # --- WINDOW SETTINGS ---
+        self.window_name = "AV Perception Dashboard v2.2"
+        cv2.namedWindow(self.window_name, cv2.WINDOW_NORMAL) 
+        
+        # Canvas Size & Layout
+        self.img_h, self.img_w = 850, 1200
+        self.side_panel_w = 250
+        self.scale = 10.0  # 1 meter = 10 pixels (Ensures 60m = 600px fits in 850px height)
+        
+        # --- DATA CONTAINERS ---
         self.tracked_peds = {} 
         self.scan_points = [] 
 
+        # ROS Infrastructure
+        self.sub_peds = self.create_subscription(PoseArray, '/perception/pedestrians_world', self.ped_callback, 10)
+        self.sub_scan = self.create_subscription(LaserScan, '/ego/lidar/scan', self.scan_callback, 10)
+        self.sub_decision = self.create_subscription(String, '/av/decision_state', self.decision_callback, 10)
+        self.sub_speed = self.create_subscription(Twist, '/ego/cmd_vel', self.speed_callback, 10)
+        
         self.create_timer(0.05, self.draw_loop) 
-        self.get_logger().info("Advanced Dashboard Started!")
+        self.get_logger().info("AV Dashboard v2.2 - Centering Fix Applied")
 
+    # =========================================================
+    # DYNAMIC COORDINATE ANCHORING
+    # =========================================================
+    def get_ui_anchors(self):
+        """Calculates the absolute center and base for the radar view"""
+        # radar_area_width is the space to the right of the side panel
+        radar_area_width = self.img_w - self.side_panel_w
+        
+        # Center X is the middle of that radar area
+        cx = self.side_panel_w + (radar_area_width // 2)
+        
+        # Center Y (Ego Position) is 100 pixels up from the very bottom
+        cy = self.img_h - 100 
+        return cx, cy
+
+    def world_to_pixel(self, wx, wy):
+        """Standardized ROS (X-Forward, Y-Left) to Pixel mapping"""
+        cx, cy = self.get_ui_anchors()
+        # ROS Y+ (Left) -> Image X- (Left)
+        ix = int(cx - (wy * self.scale))
+        # ROS X+ (Forward) -> Image Y- (Up)
+        iy = int(cy - (wx * self.scale))
+        return ix, iy
+    def world_to_pixel_track(self, wx, wy):
+        """Standardized ROS (X-Forward, Y-Left) to Pixel mapping"""
+        cx, cy = self.get_ui_anchors()
+        # ROS Y+ (Left) -> Image X- (Left)
+        ix = int(cx - (wx * self.scale))
+        # ROS X+ (Forward) -> Image Y- (Up)
+        iy = int(cy - (wy * self.scale))
+        return ix, iy
+
+    # =========================================================
+    # CALLBACKS (Kept standard)
+    # =========================================================
     def decision_callback(self, msg):
-        # Parses "STOP|ID:5" -> decision="STOP", critical_id=5
         if '|' in msg.data:
             parts = msg.data.split('|')
             self.current_decision = parts[0]
             try:
                 self.critical_id = int(parts[1].replace("ID:", ""))
-            except:
-                self.critical_id = -1
+            except: self.critical_id = -1
         else:
             self.current_decision = msg.data
             self.critical_id = -1
 
     def speed_callback(self, msg):
-        # Vehicle moves on Y axis in your current coordinate setup
         self.ego_speed = abs(msg.linear.y)
 
     def ped_callback(self, msg):
         now = time.time()
         self.topic_health["perception"]["last_msg"] = now
-        dist_threshold = 2.0  
-        new_tracked_peds = {}
-        
+        new_tracks = {}
         for i, pose in enumerate(msg.poses):
             px, py = pose.position.x, pose.position.y
             assigned_id = None
-            
             for old_id, old_p in self.tracked_peds.items():
-                d = math.sqrt((px - old_p.x)**2 + (py - old_p.y)**2)
-                if d < dist_threshold:
+                if math.sqrt((px - old_p.x)**2 + (py - old_p.y)**2) < 2.0:
                     assigned_id = old_id
                     break
-            
             if assigned_id is None:
                 assigned_id = int(time.time() * 1000) % 10000 + i 
-                
-            new_p = TrackedPedestrian(assigned_id, px, py)
-            new_tracked_peds[assigned_id] = new_p
-
-        self.tracked_peds = new_tracked_peds
+            new_tracks[assigned_id] = TrackedPedestrian(assigned_id, px, py)
+        self.tracked_peds = new_tracks
 
     def scan_callback(self, msg):
         self.topic_health["lidar"]["last_msg"] = time.time()
         points = []
         angle = msg.angle_min
         for i, r in enumerate(msg.ranges):
-            if i % 5 == 0 and 1.0 < r < 50.0:
+            if i % 5 == 0 and 1.0 < r < 70.0:
                 points.append((r * math.cos(angle), r * math.sin(angle)))
             angle += msg.angle_increment
         self.scan_points = points
 
+    # =========================================================
+    # RENDER ENGINE
+    # =========================================================
     def draw_loop(self):
         if not self.sim_running: return
 
+        # Reset image frame
         img = np.zeros((self.img_h, self.img_w, 3), dtype=np.uint8)
-        img[:] = (15, 15, 15) 
-        self.update_health()
-
-        # 1. Panels and Grid
-        cv2.rectangle(img, (0, 0), (250, self.img_h), (30, 30, 30), -1)
-        self.draw_status_panel(img)
-        self.draw_grid(img)
-
-        # 2. Lidar Data
-        lidar_color = (200, 200, 200) if self.topic_health["lidar"]["alive"] else (60, 60, 60)
-        for px, py in self.scan_points:
-            ix, iy = self.world_to_pixel_lidar(px, py)
-            if 0 <= ix < self.img_w and 0 <= iy < self.img_h:
-                cv2.circle(img, (ix, iy), 1, lidar_color, -1)
-
-        # 3. Dynamic TTC & Decision Overlay
-        # Only calculate TTC for the pedestrian triggering the safety logic
-        ttc_val = float('inf')
-        if self.critical_id in self.tracked_peds:
-            cp = self.tracked_peds[self.critical_id]
-            dist = math.sqrt(cp.x**2 + cp.y**2)
-            if self.ego_speed > 0.1:
-                ttc_val = dist / self.ego_speed
-
-        # Draw Decision Text
-        d_color = (0, 255, 0) if self.current_decision == "GO" else (0, 165, 255) if self.current_decision == "SLOW" else (0, 0, 255)
-        cv2.putText(img, f"DECISION: {self.current_decision}", (300, 50), cv2.FONT_HERSHEY_SIMPLEX, 1.0, d_color, 3)
+        img[:] = (18, 18, 18) 
         
-        if ttc_val != float('inf'):
-            cv2.putText(img, f"TTC: {ttc_val:.1f}s (ID:{self.critical_id})", (300, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 255), 2)
-
-        # 4. Ego Vehicle
-        self.draw_ego(img)
-
-        # 5. Tracked Pedestrians
-        for p_id, p in self.tracked_peds.items():
-            ix, iy = self.world_to_pixel(p.x, p.y)
-            # Highlight the critical pedestrian in Red, others in Yellow/Green
-            p_color = (0, 0, 255) if p_id == self.critical_id else (0, 255, 255)
-            cv2.circle(img, (ix, iy), 10, p_color, -1)
-            cv2.putText(img, f"ID:{p_id}", (ix+12, iy-12), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1)
-
-        cv2.imshow(self.window_name, img)
-        cv2.waitKey(1)
-
-    def update_health(self):
+        cx, cy = self.get_ui_anchors()
         now = time.time()
         for key in self.topic_health:
             self.topic_health[key]["alive"] = (now - self.topic_health[key]["last_msg"]) < 0.5
 
-    def draw_status_panel(self, img):
-        cv2.putText(img, "SYSTEM HEALTH", (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (200, 200, 200), 2)
-        for i, (name, data) in enumerate(self.topic_health.items()):
-            color = (0, 255, 0) if data["alive"] else (0, 0, 255)
-            cv2.circle(img, (30, 70 + i*30), 6, color, -1)
-            cv2.putText(img, f"{name.upper()}", (50, 75 + i*30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255,255,255), 1)
-
-    def draw_ego(self, img):
-        cw, cl = int(2.0 * self.scale), int(4.5 * self.scale)
-        # Removed the redundant static "GO" logic from here to avoid overlap
-        cv2.rectangle(img, (self.car_x - cw//2, self.car_y - cl), (self.car_x + cw//2, self.car_y), (255, 100, 0), -1)
-
-    def world_to_pixel(self, wx, wy):
-        # wx = Longitudinal (Forward distance from car)
-        # wy = Lateral (Side distance from car)
-        # Ensure this logic is applied identically to p.x, p.y AND px, py from lidar
-        ix = int(self.car_x - (wx * self.scale))
-        iy = int(self.car_y - (wy * self.scale))
-        return ix, iy
-    def world_to_pixel_lidar(self, wx, wy):
-
-        # ROS X+ (Forward) -> Image Y- (Up)
-        # ROS Y+ (Left)    -> Image X- (Left)
-        ix = int(self.car_x - (wy * self.scale))
-        iy = int(self.car_y - (wx * self.scale))
-        return ix, iy
-
-    def draw_grid(self, img):
-        for dist in [10, 20, 30, 40, 50]:
+        # 1. Static UI (Side Panel & Grid)
+        cv2.rectangle(img, (0, 0), (self.side_panel_w, self.img_h), (35, 35, 35), -1)
+        self.draw_status_panel(img)
+        
+        # Grid Rings (10m to 60m)
+        for dist in [10, 20, 30, 40, 50, 60]:
             r = int(dist * self.scale)
-            cv2.ellipse(img, (self.car_x, self.car_y), (r, r), 0, 180, 360, (50, 50, 50), 1)
-            cv2.putText(img, f"{dist}m", (self.car_x + 5, self.car_y - r + 15), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (100, 100, 100), 1)
+            cv2.ellipse(img, (cx, cy), (r, r), 0, 180, 360, (65, 65, 65), 1)
+            cv2.putText(img, f"{dist}m", (cx + 10, cy - r + 15), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (130, 130, 130), 1)
+
+        # 2. Lidar Rendering
+        l_color = (230, 230, 230) if self.topic_health["lidar"]["alive"] else (70, 70, 70)
+        for px, py in self.scan_points:
+            ix, iy = self.world_to_pixel(px, py)
+            if 0 <= ix < self.img_w and 0 <= iy < self.img_h:
+                cv2.circle(img, (ix, iy), 1, l_color, -1)
+
+        # 3. Decision & Ego HUD
+        c_map = {"GO": (0, 255, 0), "SLOW": (0, 165, 255), "STOP": (0, 0, 255)}
+        d_color = c_map.get(self.current_decision, (200, 200, 200))
+        cv2.putText(img, f"DECISION: {self.current_decision}", (self.side_panel_w + 40, 60), 
+                    cv2.FONT_HERSHEY_SIMPLEX, 1.2, d_color, 3)
+
+        # Draw Ego Vehicle (Blue Rectangle)
+        ew, el = int(2.2 * self.scale), int(4.8 * self.scale)
+        cv2.rectangle(img, (cx - ew//2, cy - el), (cx + ew//2, cy), (255, 140, 0), -1)
+
+        # 4. Pedestrian Rendering
+        for p_id, p in self.tracked_peds.items():
+            ix, iy = self.world_to_pixel_track(p.x, p.y)
+            p_color = (0, 0, 255) if p_id == self.critical_id else (0, 255, 255)
+            if 0 <= ix < self.img_w and 0 <= iy < self.img_h:
+                cv2.circle(img, (ix, iy), 10, p_color, -1)
+                cv2.putText(img, f"ID:{p_id}", (ix+15, iy-15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+
+        cv2.imshow(self.window_name, img)
+        cv2.waitKey(1)
+
+    def draw_status_panel(self, img):
+        cv2.putText(img, "SYSTEM HEALTH", (25, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (220, 220, 220), 2)
+        for i, (name, data) in enumerate(self.topic_health.items()):
+            c = (0, 255, 0) if data["alive"] else (0, 0, 255)
+            cv2.circle(img, (40, 100 + i*45), 8, c, -1)
+            cv2.putText(img, f"{name.upper()}", (65, 105 + i*45), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
 
     def handle_start_stop(self, req, res):
         self.sim_running = req.data
@@ -214,8 +208,7 @@ def main(args=None):
     node = FusionVisualizer()
     try:
         rclpy.spin(node)
-    except KeyboardInterrupt:
-        pass
+    except KeyboardInterrupt: pass
     finally:
         node.destroy_node()
         rclpy.shutdown()

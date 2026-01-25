@@ -113,7 +113,7 @@ def generate_launch_description():
         robot_state_publisher,
         delayed_spawn_vehicle,
         yolo_node,
-        pedestrian_manager,
+        # pedestrian_manager,
         tracking_manager,
         fusion_node,
         ttc_risk_node,
