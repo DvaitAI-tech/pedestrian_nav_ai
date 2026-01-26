@@ -101,7 +101,7 @@
         <visual name="v3"><pose>0 3 0 0 0 0</pose><geometry><box><size>4 1 0.01</size></box></geometry><material><ambient>1 1 1 1</ambient></material></visual>
       </link>
     </model>
-     <model name="giant_pedestrian">
+     <!-- <model name="giant_pedestrian">
       <static>true</static>
       <pose>-200 0 0 0 0 -1.57</pose> <link name="link">
         <visual name="visual">
@@ -119,7 +119,7 @@
           </geometry>
         </collision>
       </link>
-    </model>
+    </model> -->
     <plugin name="gazebo_ros_state" filename="libgazebo_ros_state.so">
   <ros>
     <namespace>/gazebo</namespace>

@@ -85,7 +85,7 @@ def generate_launch_description():
         output='screen'
     )
     # 7. Fusion Node
-    fusion_node = Node(
+    geometry_fusion_node = Node(
         package='av_sensor_package',
         executable='pedestrian_world_projection', # Or 'lidar_camera_fusion' if you renamed it
         output='screen',
@@ -103,8 +103,23 @@ def generate_launch_description():
     # 9. Fusion Visualizer Node
     # Equivalent to: ros2 run av_sensor_package fusion_visualizer
     fusion_visualizer_node = Node(
-        package='av_sensor_package',
+        package='risk_assesment',
         executable='fusion_visualizer',
+        output='screen'
+    )
+    control_arbiter = Node(
+        package='risk_assesment',
+        executable='control_arbiter',
+        output='screen'
+    )
+    safety_decision_node = Node(
+        package='risk_assesment',
+        executable='safety_decision_node',
+        output='screen'
+    )
+    pedestrian_bev_fusion = Node(
+        package='av_sensor_package',
+        executable='pedestrian_bev_fusion',
         output='screen'
     )
     return LaunchDescription([
@@ -112,10 +127,13 @@ def generate_launch_description():
         gazebo,
         robot_state_publisher,
         delayed_spawn_vehicle,
-        yolo_node,
+        # yolo_node,
         # pedestrian_manager,
         tracking_manager,
-        fusion_node,
+        # geometry_fusion_node,
         ttc_risk_node,
-        # fusion_visualizer_node
+        fusion_visualizer_node,
+        control_arbiter,
+        safety_decision_node,
+        pedestrian_bev_fusion,
     ])

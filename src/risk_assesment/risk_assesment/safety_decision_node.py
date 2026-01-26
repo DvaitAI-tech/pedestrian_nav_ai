@@ -27,9 +27,7 @@ class SafetyDecisionNode(Node):
         self.next_id = 0
         self.alpha = 0.3            # Velocity smoothing factor
         self.track_timeout = 1.0    # Seconds to keep a track
-
         self.ego_speed = 0.0        
-
         # Subscribers
         self.sub_peds = self.create_subscription(PoseArray, '/perception/pedestrians_world', self.ped_callback, 10)
         self.sub_ego = self.create_subscription(Twist, '/ego/cmd_vel', self.ego_callback, 10)
@@ -92,7 +90,7 @@ class SafetyDecisionNode(Node):
             x, y, _ = self.tracks[pid][-1]
             vx, vy = self.vel_smooth[pid]
 
-            print(f"Evaluating Pedestrian ID: {pid} at Position ({x:.2f}, {y:.2f}) with Velocity ({vx:.2f}, {vy:.2f})")
+            print(f"Evaluating Pedestrian ID: {pid} at Position ({x:.2f}, {y:.2f}) with Velocity ({vx:.2f}, {vy:.2f}) {self.lane_width / 2.0}")
             # Lane Filter
             if y <= 0.0 or abs(x) > (self.lane_width / 2.0):
                 continue

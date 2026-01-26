@@ -17,6 +17,9 @@ AREA_Y_MIN = -10.0         # Road width range
 AREA_Y_MAX = 10.0
 # =====================
 
+
+
+
 class PedestrianManager(Node):
     def __init__(self):
         super().__init__('pedestrian_manager')

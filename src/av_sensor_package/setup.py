@@ -28,7 +28,8 @@ setup(
             'pedestrian_ttc_risk_plot=av_sensor_package.pedestrian_ttc_risk_plot:main',
             'pedestrian_world_projection=av_sensor_package.pedestrian_world_projection:main',
             'pedestrian_ttc_risk_world=av_sensor_package.pedestrian_ttc_risk_world:main',
-            'fusion_visualizer=av_sensor_package.fusion_visualizer:main'
+            'fusion_visualizer=av_sensor_package.fusion_visualizer:main',
+            'pedestrian_bev_fusion=av_sensor_package.pedestrian_bev_fusion:main',  
         ],
     },
 )
