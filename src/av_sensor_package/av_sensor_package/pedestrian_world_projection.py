@@ -61,7 +61,6 @@ class LidarCameraFusion(Node):
         self.callback_count += 1
         if self.fx is None: 
             return
-
         pose_array = PoseArray()
         pose_array.header = det_msg.header
         pose_array.header.frame_id = self.base_frame

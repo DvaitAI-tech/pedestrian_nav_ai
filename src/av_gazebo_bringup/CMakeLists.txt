@@ -27,6 +27,7 @@ install(DIRECTORY
   urdf
   worlds
   materials
+  model_training
   DESTINATION share/${PROJECT_NAME}
 )
 install(PROGRAMS

@@ -27,6 +27,7 @@ setup(
             'fusion_visualizer=risk_assesment.fusion_visualizer:main',
             'safety_decision_node=risk_assesment.safety_decision_node:main',
             'control_arbiter=risk_assesment.control_arbiter:main',
+            'safety_decision_ema_stm=risk_assesment.safety_decision_node_ema_lstm:main',
         ],
     },
 )

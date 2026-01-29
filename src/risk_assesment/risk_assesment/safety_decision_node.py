@@ -12,7 +12,6 @@ from std_msgs.msg import String
 class SafetyDecisionNode(Node):
     def __init__(self):
         super().__init__('safety_decision_node')
-
         # === PARAMETERS ===
         self.stop_dist = 30.0       
         self.slow_ttc = 35.0        

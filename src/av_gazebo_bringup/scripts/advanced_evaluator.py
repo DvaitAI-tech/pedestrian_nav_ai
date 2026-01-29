@@ -21,24 +21,27 @@ class MasterScenarioEvaluator(Node):
         self.scenarios = {
             "high_speed_collision": {
                 "desc": "Testing TTC at 30m/s with dynamic crossing pedestrians",
-                "ego": {"x": -302.0, "y": 0.0, "yaw": -1.60, "vel": 20.0},
+                "ego": {"x": -302.0, "y": 0.0, "yaw": -1.57, "vel": 5.0},
                 "peds": {
-                    "ped_1": {"x": -200.0, "y": 5.0,  "yaw": 0.0, "vel": 1.2, "type": "crossing"},
-                    "ped_2": {"x": -150.0, "y": -5.0, "yaw": 0.0, "vel": 1.5, "type": "crossing"},
-                    "ped_3": {"x": -100.0, "y": 2.0,  "yaw": 0.0, "vel": 1.0, "type": "static"}
+                    "ped_1": {"x": -200.0, "y": -10.0,  "yaw": 0.0, "vel_x": 1, "vel_y": 10, "range": 3.0, "type": "crossing"},
+                    "ped_2": {"x": -100.0, "y": -10.0,  "yaw": 0.0, "vel_x": 1, "vel_y": 10, "range": 3.0, "type": "crossing"},
+                    "ped_3": {"x": 0.0, "y": -10.0,     "yaw": 0.0, "vel_x": 1, "vel_y": 10, "range": 3.0, "type": "crossing"},
+                    "ped_4": {"x": 100.0, "y": -10.0,   "yaw": 0.0, "vel_x": 1, "vel_y": 10, "range": 3.0, "type": "crossing"},
+                    "ped_5": {"x": 200.0, "y": -10.0,   "yaw": 0.0, "vel_x": 1, "vel_y": 10, "range": 3.0, "type": "crossing"},
                 }
             },
             "edge_of_view_occlusion": {
                 "desc": "Testing Track Persistence with crossing pedestrians",
-                "ego": {"x": 0.0, "y": 0.0, "yaw": -1.57, "vel": 10.0},
+                "ego": {"x": -302.0, "y": 0.0, "yaw": -1.57, "vel": 10.0},
                 "peds": {
-                    "ped_1": {"x": 8.0, "y": 40.0, "yaw": 3.14, "vel": 2.5},
-                    "ped_2": {"x": 8.0, "y": 35.0, "yaw": 3.14, "vel": 2.5},
-                    "ped_3": {"x": 8.0, "y": 30.0, "yaw": 3.14, "vel": 2.5}
+                    "ped_1": {"x": -50.0, "y": -7.0, "yaw": 0, "vel_x": 1, "vel_y":10, "range": 3.0,"type": "crossing"},
+                    "ped_2": {"x": 50.0, "y": 5.0, "yaw": 0, "vel_x": 1, "vel_y": -10, "range": 3.0, "type": "crossing"},
+                    "ped_3": {"x": 120.0, "y": -7.0, "yaw": 0, "vel_x": 1, "vel_y":10, "range": 3.0, "type": "crossing"}
                 }
             }
         }
-
+        # Add this to your __init__
+        self.start_time = self.get_clock().now()
         # 2. GAZEBO CLIENTS
         self.spawn_client = self.create_client(SpawnEntity, '/spawn_entity')
         self.set_state_client = self.create_client(SetEntityState, '/gazebo/set_entity_state')
@@ -100,6 +103,7 @@ class MasterScenarioEvaluator(Node):
 
     def master_control_loop(self):
         config = self.scenarios[self.current_scenario_name]
+        elapsed_time = (self.get_clock().now() - self.start_time).nanoseconds / 1e9
         
         # Ego Motion
         ego_msg = Twist()
@@ -112,7 +116,10 @@ class MasterScenarioEvaluator(Node):
                 ped_msg = Twist()
                 if p_config["type"] == "crossing":
                     # Pedestrians cross the road (move along X)
-                    ped_msg.linear.y = p_config["vel"]
+                    p_direction = math.sin(elapsed_time * (p_config["vel_x"] / p_config["range"]))
+                    # Move in both X and Y
+                    ped_msg.linear.x = p_config["vel_x"] * p_direction
+                    ped_msg.linear.y = p_config["vel_y"] * p_direction
                 else:
                     ped_msg.linear.x = 0.0
                 self.ped_pubs[p_name].publish(ped_msg)
