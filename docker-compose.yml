@@ -1,23 +1,35 @@
 services:
   ros_humble:
-    image: pedestrian_nav_fixed_v3
+    build: .
+    image: pedestrian_nav:humble-gazebo-yolo-stable
     container_name: pedestrian_nav_container
-    # This line sets the starting folder
-    working_dir: /home/nk/pedestrian_nav_ai
+
     network_mode: host
     privileged: true
-    shm_size: '4gb'
+    shm_size: '8gb'
+
+    environment:
+      - DISPLAY=${DISPLAY}
+      - QT_X11_NO_MITSHM=1
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=graphics,utility,compute
+      - __GLX_VENDOR_LIBRARY_NAME=nvidia
+      - __NV_PRIME_RENDER_OFFLOAD=1
+      - GZ_RENDER_ENGINE=ogre2
+      
+
     volumes:
       - .:/home/nk/pedestrian_nav_ai
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority:rw
-    environment:
-      - DISPLAY=${DISPLAY}
-      - XAUTHORITY=/root/.Xauthority
-      - LIBGL_ALWAYS_SOFTWARE=1
-      - QT_X11_NO_MITSHM=1
-    devices:
-      - /dev/dri:/dev/dri
+
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
     stdin_open: true
     tty: true
     command: /bin/bash

@@ -20,3 +20,11 @@ ros2 run xacro xacro ego_vehicle.urdf.xacro -o ego_vehicle.urdf
 
 pkill -9 gzserver
 pkill -9 gzclient
+
+sudo docker compose down
+sudo docker compose up -d
+xhost +local:root
+xhost +local:docker
+sudo docker exec -it pedestrian_nav_container bash
+docker attach pedestrian_nav_container
+

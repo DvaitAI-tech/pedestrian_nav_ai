@@ -130,7 +130,7 @@ def generate_launch_description():
         yolo_node,
         # pedestrian_manager,
         tracking_manager,
-        geometry_fusion_node,
+        # geometry_fusion_node,
         ttc_risk_node,
         fusion_visualizer_node,
         control_arbiter,
