@@ -50,7 +50,7 @@ class SafetyDecisionNode(Node):
         except:
             self.get_logger().error("❌ Failed to load LSTM model! Check if ped_lstm_model.pth exists.")
 
-        self.csv_file = open('realtime_comparison.csv', 'w', newline='')
+        self.csv_file = open('results/realtime_comparison.csv', 'w', newline='')
         self.csv_writer = csv.writer(self.csv_file)
         self.csv_writer.writerow(['time', 'id', 'actual_x', 'actual_y', 'ema_x', 'ema_y', 'lstm_x', 'lstm_y'])
 

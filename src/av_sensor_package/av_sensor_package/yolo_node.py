@@ -34,7 +34,7 @@ class YoloCameraNode(Node):
 
         # ---------------- YOLO MODEL ----------------
         self.get_logger().info('Loading YOLO model (yolov8n.pt)...')
-        self.model = YOLO('yolov8n.pt')
+        self.model = YOLO('models/yolov8n.pt')
         self.get_logger().info('YOLO model loaded successfully.')
 
         # ---------------- SUBSCRIBER ----------------

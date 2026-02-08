@@ -52,7 +52,7 @@ class MasterScenarioEvaluator(Node):
         
         # 4. METRICS LOGGING
         self.create_subscription(String, '/av/decision_state', self.decision_callback, 10)
-        self.results_file = open('benchmark_results.csv', 'w', newline='')
+        self.results_file = open('results/benchmark_results.csv', 'w', newline='')
         self.writer = csv.writer(self.results_file)
         self.writer.writerow(['Timestamp', 'Scenario', 'Decision', 'TTC'])
 

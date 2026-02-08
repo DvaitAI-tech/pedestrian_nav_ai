@@ -3,10 +3,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 
-def generate_dissertation_plots(file_path='realtime_comparison.csv'):
+def generate_dissertation_plots(file_path='results/realtime_comparison.csv'):
     if not os.path.exists(file_path):
         # Fallback to absolute path if local file not found
-        file_path = '/home/nk/Music/pedestrian_nav_ai/realtime_comparison.csv'
+        file_path = '/home/nk/Music/pedestrian_nav_ai/results/realtime_comparison.csv'
         if not os.path.exists(file_path):
             print(f"Error: {file_path} not found.")
             return
